@@ -7,9 +7,10 @@ on:
   push:
     branches:
       - master
-      - v[0-9]+.[0-9]+.x
+      - v[0-9]+.[0-9]+.x  # maintenance branches
+      - gha-.+  # special branches for testing Actions changes
     tags:
-      - v*
+      - v*  # release tags
   pull_request:
     branches:
       - master
@@ -19,10 +20,6 @@ jobs:
   style:
     name: Style checks
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [2.7, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9]
-        #python-version: [3.9]
 
     steps:
     - uses: actions/checkout@v2
@@ -36,10 +33,10 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.9
     - name: Install dependencies
       run: pip install --upgrade -r dev-requirements.txt
-    - name: Check code style w/flake8
+    - name: Check code style
       run: make quality
 
   tests:
@@ -48,8 +45,7 @@ jobs:
     needs: [style]
     strategy:
       matrix:
-        #python-version: [2.7, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9]
-        python-version: [3.6]
+        python-version: [2.7, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9]
 
     steps:
     - uses: actions/checkout@v2
@@ -99,3 +95,5 @@ jobs:
         pip install --upgrade setuptools
         pip install --upgrade -r requirements.txt -r dev-requirements.txt
     - name: Deploy to PyPI
+      run: |
+        echo "This would deploy to PyPI if I'd set it up."
