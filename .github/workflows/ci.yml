@@ -7,10 +7,10 @@ on:
   push:
     branches:
       - master
-      - v[0-9]+.[0-9]+.x  # maintenance branches
-      - gha-.+  # special branches for testing Actions changes
+      - v[0-9]+.[0-9]+.x
+      - gha-.+
     tags:
-      - v*  # release tags
+      - v*
   pull_request:
     branches:
       - master
