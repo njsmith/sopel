@@ -34,7 +34,7 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: [3.9]
     - name: Install dependencies
       run: pip install --upgrade -r dev-requirements.txt
     - name: Check code style
