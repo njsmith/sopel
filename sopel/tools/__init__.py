@@ -174,7 +174,18 @@ def deprecated(
             module_name = None
             if mod:
                 module_name = mod.__name__
-            logger = logging.getLogger(module_name)
+            if module_name:
+                if 'sopel.' in module_name:
+                    # core, or core plugin
+                    logger = logging.getLogger(module_name)
+                else:
+                    # probably a plugin; use Sopel's public API for getting the
+                    # logger for a plugin
+                    logger = get_logger(module_name.replace('sopel_modules.', ''))
+            else:
+                # don't know the module/plugin name, but we want to make sure
+                # the log line is still output, so fudge it
+                logger = logging.getLogger('sopel.<unknown>')
 
             # Format only the desired stack frame
             trace = traceback.extract_stack()
