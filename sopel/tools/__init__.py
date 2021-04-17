@@ -17,6 +17,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import codecs
 from collections import defaultdict
 import functools
+import inspect
 import logging
 import os
 import re
@@ -168,10 +169,20 @@ def deprecated(
     def deprecated_func(*args, **kwargs):
         if not (warning_in and
                 parse_version(warning_in) >= parse_version(__version__)):
-            stderr(text)
-            # Only display the last frame
+            original_frame = inspect.stack()[-stack_frame]
+            mod = inspect.getmodule(original_frame[0])
+            module_name = None
+            if mod:
+                module_name = mod.__name__
+            logger = logging.getLogger(module_name)
+
+            # Format only the desired stack frame
             trace = traceback.extract_stack()
-            stderr(traceback.format_list(trace[:-1])[stack_frame][:-1])
+            trace_frame = traceback.format_list(trace[:-1])[stack_frame][:-1]
+
+            # Warn the user
+            logger.warning(text + "\n" + trace_frame)
+
         return func(*args, **kwargs)
 
     return deprecated_func
