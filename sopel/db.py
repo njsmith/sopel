@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import errno
 import json
 import logging
+import os
 import os.path
 import sys
 import traceback
@@ -116,57 +117,60 @@ class SopelDB(object):
         # SQLite - sqlite:////home/sopel/.sopel/default.db
         self.type = config.core.db_type
 
-        # Handle SQLite explicitly as a default
-        if self.type == 'sqlite':
-            path = config.core.db_filename
-            if path is None:
-                path = os.path.join(config.core.homedir, config.basename + '.db')
-            path = os.path.expanduser(path)
-            if not os.path.isabs(path):
-                path = os.path.normpath(os.path.join(config.core.homedir, path))
-            if not os.path.isdir(os.path.dirname(path)):
-                raise OSError(
-                    errno.ENOENT,
-                    'Cannot create database file. '
-                    'No such directory: "{}". Check that configuration setting '
-                    'core.db_filename is valid'.format(os.path.dirname(path)),
-                    path
-                )
-            self.filename = path
-            self.url = 'sqlite:///%s' % path
-        # Otherwise, handle all other database engines
+        if "DATABASE_URL" in os.environ:
+            self.url = os.environ["DATABASE_URL"]
         else:
-            query = {}
-            if self.type == 'mysql':
-                drivername = config.core.db_driver or 'mysql'
-                query = {'charset': 'utf8mb4'}
-            elif self.type == 'postgres':
-                drivername = config.core.db_driver or 'postgresql'
-            elif self.type == 'oracle':
-                drivername = config.core.db_driver or 'oracle'
-            elif self.type == 'mssql':
-                drivername = config.core.db_driver or 'mssql+pymssql'
-            elif self.type == 'firebird':
-                drivername = config.core.db_driver or 'firebird+fdb'
-            elif self.type == 'sybase':
-                drivername = config.core.db_driver or 'sybase+pysybase'
+            # Handle SQLite explicitly as a default
+            if self.type == 'sqlite':
+                path = config.core.db_filename
+                if path is None:
+                    path = os.path.join(config.core.homedir, config.basename + '.db')
+                path = os.path.expanduser(path)
+                if not os.path.isabs(path):
+                    path = os.path.normpath(os.path.join(config.core.homedir, path))
+                if not os.path.isdir(os.path.dirname(path)):
+                    raise OSError(
+                        errno.ENOENT,
+                        'Cannot create database file. '
+                        'No such directory: "{}". Check that configuration setting '
+                        'core.db_filename is valid'.format(os.path.dirname(path)),
+                        path
+                    )
+                self.filename = path
+                self.url = 'sqlite:///%s' % path
+            # Otherwise, handle all other database engines
             else:
-                raise Exception('Unknown db_type')
+                query = {}
+                if self.type == 'mysql':
+                    drivername = config.core.db_driver or 'mysql'
+                    query = {'charset': 'utf8mb4'}
+                elif self.type == 'postgres':
+                    drivername = config.core.db_driver or 'postgresql'
+                elif self.type == 'oracle':
+                    drivername = config.core.db_driver or 'oracle'
+                elif self.type == 'mssql':
+                    drivername = config.core.db_driver or 'mssql+pymssql'
+                elif self.type == 'firebird':
+                    drivername = config.core.db_driver or 'firebird+fdb'
+                elif self.type == 'sybase':
+                    drivername = config.core.db_driver or 'sybase+pysybase'
+                else:
+                    raise Exception('Unknown db_type')
 
-            db_user = config.core.db_user
-            db_pass = config.core.db_pass
-            db_host = config.core.db_host
-            db_port = config.core.db_port  # Optional
-            db_name = config.core.db_name  # Optional, depending on DB
+                db_user = config.core.db_user
+                db_pass = config.core.db_pass
+                db_host = config.core.db_host
+                db_port = config.core.db_port  # Optional
+                db_name = config.core.db_name  # Optional, depending on DB
 
-            # Ensure we have all our variables defined
-            if db_user is None or db_pass is None or db_host is None:
-                raise Exception('Please make sure the following core '
-                                'configuration values are defined: '
-                                'db_user, db_pass, db_host')
-            self.url = URL(drivername=drivername, username=db_user,
-                           password=db_pass, host=db_host, port=db_port,
-                           database=db_name, query=query)
+                # Ensure we have all our variables defined
+                if db_user is None or db_pass is None or db_host is None:
+                    raise Exception('Please make sure the following core '
+                                    'configuration values are defined: '
+                                    'db_user, db_pass, db_host')
+                self.url = URL(drivername=drivername, username=db_user,
+                               password=db_pass, host=db_host, port=db_port,
+                               database=db_name, query=query)
 
         self.engine = create_engine(self.url, pool_recycle=3600)
 
