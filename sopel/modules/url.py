@@ -33,7 +33,7 @@ LOGGER = logging.getLogger(__name__)
 USER_AGENT = (
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
     'AppleWebKit/537.36 (KHTML, like Gecko) '
-    'Chrome/78.0.3904.108 Safari/537.36'
+    'Chrome/98.0.4758.102 Safari/537.36'
 )
 DEFAULT_HEADERS = {
     'User-Agent': USER_AGENT,
@@ -368,7 +368,7 @@ def process_urls(bot, trigger, urls):
         title = find_title(url)
         if not title:
             # No title found: don't handle this URL
-            LOGGER.warning('No title found; ignoring URL: %s', url)
+            LOGGER.debug('No title found; ignoring URL: %s', url)
             continue
 
         # If the URL is over bot.config.url.shorten_url_length, shorten the URL
@@ -426,7 +426,7 @@ def find_title(url, verify=True):
         # the data
         response.close()
     except requests.exceptions.ConnectionError:
-        LOGGER.exception('Unable to reach URL: %s', url)
+        LOGGER.debug('Unable to reach URL: %s', url, exc_info=True)
         return None
     except (
         requests.exceptions.InvalidURL,  # e.g. http:///
